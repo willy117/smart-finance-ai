@@ -84,7 +84,7 @@ const App: React.FC = () => {
         <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-3xl mb-6">⚠️</div>
         <h2 className="text-2xl font-bold text-slate-800 mb-2">尚未偵測到 Firebase 配置</h2>
         <p className="text-slate-600 max-w-md mb-8">
-          請前往 GitHub Repository 的 <b>Settings > Secrets and variables > Actions</b> 新增名為 <code>FIREBASE_CONFIG</code> 的 Secret。
+          請前往 GitHub Repository 的 <b>Settings &gt; Secrets and variables &gt; Actions</b> 新增名為 <code>FIREBASE_CONFIG</code> 的 Secret。
         </p>
         <div className="bg-white p-4 rounded-xl border border-slate-200 text-left text-sm font-mono text-slate-500">
           格式範例：<br/>

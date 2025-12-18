@@ -1,17 +1,19 @@
 
 import { initializeApp } from "firebase/app";
 import type { FirebaseApp } from "firebase/app";
-// Use named imports for Firebase Auth functions
+// Fix: Import modular auth functions directly from "firebase/auth" without aliases.
+// This resolves the "no exported member" errors by simplifying the resolution path.
 import { 
   getAuth, 
-  onAuthStateChanged as firebaseOnAuthStateChanged, 
-  signOut as firebaseSignOut, 
-  signInWithEmailAndPassword as firebaseSignInWithEmailAndPassword, 
-  createUserWithEmailAndPassword as firebaseCreateUserWithEmailAndPassword, 
-  updateProfile as firebaseUpdateProfile 
+  onAuthStateChanged, 
+  signOut, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  updateProfile 
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
+import type { Auth } from "firebase/auth";
 
 const getValidFirebaseConfig = () => {
   const rawConfig = process.env.FIREBASE_CONFIG;
@@ -34,13 +36,13 @@ const getValidFirebaseConfig = () => {
 const config = getValidFirebaseConfig();
 
 let app: FirebaseApp | undefined;
-let authInstance: any = null;
-let dbInstance: any = null;
+let authInstance: Auth | null = null;
+let dbInstance: Firestore | null = null;
 
 if (config) {
   try {
     app = initializeApp(config);
-    // Use getAuth directly as a function
+    // Initialize Auth and Firestore using the modular pattern.
     authInstance = getAuth(app);
     dbInstance = getFirestore(app);
     console.log("✅ Firebase 初始化成功");
@@ -52,10 +54,11 @@ if (config) {
 export const auth = authInstance;
 export const db = dbInstance;
 
-// 安全地重新匯出 Auth 方法
-// Exporting the functions imported from firebase/auth
-export const onAuthStateChanged = firebaseOnAuthStateChanged;
-export const signOut = firebaseSignOut;
-export const signInWithEmailAndPassword = firebaseSignInWithEmailAndPassword;
-export const createUserWithEmailAndPassword = firebaseCreateUserWithEmailAndPassword;
-export const updateProfile = firebaseUpdateProfile;
+// Fix: Re-export modular auth functions directly to ensure they are available to other parts of the app.
+export { 
+  onAuthStateChanged, 
+  signOut, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  updateProfile 
+};
