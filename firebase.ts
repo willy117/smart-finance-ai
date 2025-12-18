@@ -1,19 +1,17 @@
 
-import { initializeApp } from "firebase/app";
-import type { FirebaseApp } from "firebase/app";
-// Fix: Import modular auth functions directly from "firebase/auth" without aliases.
-// This resolves the "no exported member" errors by simplifying the resolution path.
+import { initializeApp, type FirebaseApp } from "firebase/app";
+// Fix: Consolidate modular auth functions and types into a single import block.
+// This often resolves "no exported member" errors caused by inconsistent type resolution in some build environments.
 import { 
   getAuth, 
   onAuthStateChanged, 
   signOut, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  updateProfile 
+  updateProfile,
+  type Auth 
 } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import type { Firestore } from "firebase/firestore";
-import type { Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 const getValidFirebaseConfig = () => {
   const rawConfig = process.env.FIREBASE_CONFIG;
@@ -54,7 +52,7 @@ if (config) {
 export const auth = authInstance;
 export const db = dbInstance;
 
-// Fix: Re-export modular auth functions directly to ensure they are available to other parts of the app.
+// Re-export modular auth functions directly to ensure they are available to other parts of the app.
 export { 
   onAuthStateChanged, 
   signOut, 
