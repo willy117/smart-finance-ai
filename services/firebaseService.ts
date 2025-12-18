@@ -4,28 +4,30 @@ import {
   collection, 
   doc, 
   setDoc, 
-  getDocs, 
-  query, 
-  where,
-  deleteDoc
+  getDocs
 } from 'firebase/firestore';
 import { Account, Transaction } from '../types';
 
 export const syncUserData = async (userId: string, accounts: Account[], transactions: Transaction[]) => {
+  if (!db) {
+    console.warn("Firestore instance is not initialized. Skipping sync.");
+    return;
+  }
+
   try {
-    const userRef = doc(db, 'users', userId);
+    const userRef = doc(db!, 'users', userId);
     await setDoc(userRef, {
       lastUpdated: new Date().toISOString()
     });
 
     // 儲存帳戶
-    const accountsRef = collection(db, 'users', userId, 'accounts');
+    const accountsRef = collection(db!, 'users', userId, 'accounts');
     for (const acc of accounts) {
       await setDoc(doc(accountsRef, acc.id), acc);
     }
 
     // 儲存交易
-    const transRef = collection(db, 'users', userId, 'transactions');
+    const transRef = collection(db!, 'users', userId, 'transactions');
     for (const trans of transactions) {
       await setDoc(doc(transRef, trans.id), trans);
     }
@@ -35,9 +37,14 @@ export const syncUserData = async (userId: string, accounts: Account[], transact
 };
 
 export const loadUserData = async (userId: string) => {
+  if (!db) {
+    console.warn("Firestore instance is not initialized. Skipping load.");
+    return { accounts: [], transactions: [] };
+  }
+
   try {
-    const accountsSnapshot = await getDocs(collection(db, 'users', userId, 'accounts'));
-    const transactionsSnapshot = await getDocs(collection(db, 'users', userId, 'transactions'));
+    const accountsSnapshot = await getDocs(collection(db!, 'users', userId, 'accounts'));
+    const transactionsSnapshot = await getDocs(collection(db!, 'users', userId, 'transactions'));
 
     const accounts = accountsSnapshot.docs.map(doc => doc.data() as Account);
     const transactions = transactionsSnapshot.docs.map(doc => doc.data() as Transaction);

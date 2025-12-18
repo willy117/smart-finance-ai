@@ -23,11 +23,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    if (!auth) {
+      setError('Firebase 尚未配置完成，請聯繫管理員。');
+      return;
+    }
+
     setLoading(true);
 
     try {
       if (isRegister) {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // Use non-null assertion as we already checked auth above
+        const userCredential = await createUserWithEmailAndPassword(auth!, email, password);
         await updateProfile(userCredential.user, { displayName: name });
         const newUser: User = {
           id: userCredential.user.uid,
@@ -36,7 +43,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         };
         onLogin(newUser);
       } else {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth!, email, password);
         const existingUser: User = {
           id: userCredential.user.uid,
           email: userCredential.user.email || '',
