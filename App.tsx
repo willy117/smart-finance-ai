@@ -17,56 +17,56 @@ const App: React.FC = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [configError, setConfigError] = useState(false);
+  const [isConfigured, setIsConfigured] = useState(true);
 
   useEffect(() => {
-    // 如果 auth 沒被正確初始化（可能是因為 Secrets 沒設），顯示錯誤引導
+    // 核心修正：檢查 Firebase Auth 模組是否可用
     if (!auth) {
-      setConfigError(true);
+      setIsConfigured(false);
       setLoading(false);
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const userData = {
-          id: firebaseUser.uid,
-          email: firebaseUser.email || '',
-          name: firebaseUser.displayName || '使用者'
-        };
-        setUser(userData);
-        
-        try {
+    try {
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          const userData = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            name: firebaseUser.displayName || '使用者'
+          };
+          setUser(userData);
+          
           const cloudData = await loadUserData(firebaseUser.uid);
-          if (cloudData.accounts.length > 0) {
+          if (cloudData && cloudData.accounts && cloudData.accounts.length > 0) {
             setAccounts(cloudData.accounts);
             setTransactions(cloudData.transactions);
           } else {
             setAccounts(INITIAL_ACCOUNTS);
             setTransactions(INITIAL_TRANSACTIONS);
           }
-        } catch (e) {
-          console.error("載入資料失敗", e);
-          setAccounts(INITIAL_ACCOUNTS);
-          setTransactions(INITIAL_TRANSACTIONS);
+        } else {
+          setUser(null);
         }
-      } else {
-        setUser(null);
-      }
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Auth Listener Error:", error);
+      setIsConfigured(false);
       setLoading(false);
-    });
-
-    return () => unsubscribe();
+    }
   }, []);
 
+  // 自動同步資料到 Firebase
   useEffect(() => {
-    if (user && !loading && auth) {
+    if (user && !loading && auth && isConfigured) {
       const timeoutId = setTimeout(() => {
         syncUserData(user.id, accounts, transactions);
       }, 2000);
       return () => clearTimeout(timeoutId);
     }
-  }, [accounts, transactions, user, loading]);
+  }, [accounts, transactions, user, loading, isConfigured]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -77,32 +77,39 @@ const App: React.FC = () => {
     }
   };
 
-  if (configError) {
+  // 1. 如果尚未配置 Secrets 的處理畫面
+  if (!isConfigured) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
-        <div className="text-6-xl mb-4">⚠️</div>
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">配置尚未完成</h2>
-        <p className="text-slate-600 max-w-md">
-          請確保您已在 GitHub Secrets 中設定了 <b>FIREBASE_CONFIG</b>。<br/>
-          設定完成後，請重新執行 GitHub Actions 佈署。
+        <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-3xl mb-6">⚠️</div>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">尚未偵測到 Firebase 配置</h2>
+        <p className="text-slate-600 max-w-md mb-8">
+          請前往 GitHub Repository 的 <b>Settings > Secrets and variables > Actions</b> 新增名為 <code>FIREBASE_CONFIG</code> 的 Secret。
         </p>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 text-left text-sm font-mono text-slate-500">
+          格式範例：<br/>
+          {`{"apiKey": "AIza...", "authDomain": "...", ...}`}
+        </div>
       </div>
     );
   }
 
+  // 2. 載入中畫面
   if (loading) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
         <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-slate-600 font-medium">系統同步中...</p>
+        <p className="text-slate-600 font-medium">安全連接中...</p>
       </div>
     );
   }
 
+  // 3. 登入畫面
   if (!user) {
     return <Login onLogin={(u) => setUser(u)} />;
   }
 
+  // 4. 主應用畫面
   return (
     <HashRouter>
       <div className="flex bg-slate-50 min-h-screen">
