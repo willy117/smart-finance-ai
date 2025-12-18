@@ -1,18 +1,9 @@
 
 import { initializeApp } from "firebase/app";
 import type { FirebaseApp } from "firebase/app";
-// Fix: Standard modular imports for Firebase Auth. 
-// Separating type imports (like Auth) from value imports (like getAuth) improves compatibility 
-// with various TypeScript and module resolution configurations.
-import { 
-  getAuth, 
-  onAuthStateChanged, 
-  signOut, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  updateProfile 
-} from "firebase/auth";
-import type { Auth } from "firebase/auth";
+// Standard modular imports for Firebase Auth. 
+// Consolidating to a single line can help resolve issues with certain bundlers or TypeScript configurations.
+import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import type { Firestore } from "firebase/firestore";
 
@@ -37,7 +28,8 @@ const getValidFirebaseConfig = () => {
 const config = getValidFirebaseConfig();
 
 let app: FirebaseApp | undefined;
-let authInstance: Auth | null = null;
+// Use any for authInstance to avoid "no exported member 'Auth'" error, ensuring compatibility across different Firebase version types.
+let authInstance: any = null;
 let dbInstance: Firestore | null = null;
 
 if (config) {
@@ -55,7 +47,7 @@ if (config) {
 export const auth = authInstance;
 export const db = dbInstance;
 
-// Re-export modular auth functions directly to ensure they are available to other parts of the app.
+// Re-export modular auth functions directly.
 export { 
   onAuthStateChanged, 
   signOut, 
